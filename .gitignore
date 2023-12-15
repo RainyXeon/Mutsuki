@@ -128,3 +128,15 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+app.yml
+cylane.database.json
+byteblaze.database.json
+.cylane/
+
+.env
+
+.clinic
+
+draft/
+temp/
