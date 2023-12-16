@@ -1,6 +1,6 @@
 # Mutsuki framework
 
-This is the framework that I used for RainyXeon/ByteBlaze discord bot. Inspired from Adivise/NanoSpace (Im not based in that).
+This is the framework that I used for RainyXeon/ByteBlaze discord bot. Inspired by Adivise/NanoSpace (Im not based in that).
 
 # Install
 
