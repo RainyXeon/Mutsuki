@@ -32,7 +32,7 @@ npm run build:full
 
 # Commands
 
-Check the `/@example` dir
+Check the `/src/commands` dir
 
 # Optional
 
