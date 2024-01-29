@@ -1,30 +1,26 @@
-import {
-  EmbedBuilder,
-  ApplicationCommandType,
-  ContextMenuCommandInteraction,
-  version,
-} from "discord.js";
+import { Accessableby, Command } from "../../structures/Command.js";
+import { CommandHandler } from "../../structures/CommandHandler.js";
 import { Manager } from "../../manager.js";
-import { Accessableby, ContextCommand } from "../../@types/Command.js";
 import os from "os";
 import ms from "pretty-ms";
 import { stripIndents } from "common-tags";
+import { EmbedBuilder, version } from "discord.js";
 
-export default class implements ContextCommand {
-  name = ["Status"];
-  type = ApplicationCommandType.Message;
-  category = "Context";
-  accessableby = Accessableby.Member;
-  /**
-   * @param {ContextMenuInteraction} interaction
-   */
-  async run(
-    interaction: ContextMenuCommandInteraction,
-    client: Manager,
-    language: string
-  ) {
-    await interaction.deferReply({ ephemeral: false });
+export default class implements Command {
+  public name = ["status"];
+  public description = "Shows the status information of the Bot";
+  public category = "Info";
+  public accessableby = Accessableby.Member;
+  public usage = "";
+  public aliases = [];
+  public lavalink = false;
+  public options = [];
+  public playerCheck = false;
+  public usingInteraction = true;
+  public sameVoiceCheck = false;
 
+  public async execute(client: Manager, handler: CommandHandler) {
+    await handler.deferReply();
     const total = os.totalmem() / 1024 / 1024;
     const used = process.memoryUsage().rss / 1024 / 1024;
 
@@ -40,25 +36,25 @@ export default class implements ContextCommand {
     const botInfo = stripIndents`\`\`\`
     - Codename: ${client.metadata.codename}
     - Bot version: ${client.metadata.version}
+    - Autofix version: ${client.metadata.autofix}
     - Discord.js: ${version}
     - WebSocket Ping: ${client.ws.ping}ms
-    - Response time: ${Date.now() - interaction.createdTimestamp}ms
+    - Response time: ${Date.now() - handler.createdAt}ms
     - Guild Count: ${client.guilds.cache.size}
     - User count: ${client.guilds.cache.reduce((a, b) => a + b.memberCount, 0)}
     \`\`\``;
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: client.user!.tag + " Status",
+        name: client.user!.username,
         iconURL: String(client.user!.displayAvatarURL({ size: 2048 })),
       })
       .setColor(client.color)
       .addFields(
-        { name: "Host info", value: hostInfo },
-        { name: "Bot info", value: botInfo }
+        { name: "Host Info", value: hostInfo },
+        { name: "Bot Info", value: botInfo }
       )
       .setTimestamp();
-
-    return interaction.editReply({ embeds: [embed] });
+    await handler.editReply({ embeds: [embed] });
   }
 }

@@ -1,14 +1,14 @@
 import chillout from "chillout";
 import readdirRecursive from "recursive-readdir";
-import { resolve, relative } from "node:path";
-import { Manager } from "../../manager.js";
-import { join, dirname } from "node:path";
+import { resolve, relative } from "path";
+import { Manager } from "../manager.js";
+import { join, dirname } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
-import { PrefixCommand } from "../../@types/Command.js";
-import { KeyCheckerEnum } from "../../@types/KeyChecker.js";
+import { KeyCheckerEnum } from "../@types/KeyChecker.js";
+import { Command } from "../structures/Command.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export class loadPrefixCommands {
+export class loadCommands {
   client: Manager;
   constructor(client: Manager) {
     this.client = client;
@@ -16,9 +16,7 @@ export class loadPrefixCommands {
   }
 
   async loader() {
-    let commandPath = resolve(
-      join(__dirname, "..", "..", "commands", "prefix")
-    );
+    let commandPath = resolve(join(__dirname, "..", "commands"));
     let commandFiles = await readdirRecursive(commandPath);
 
     await chillout.forEach(commandFiles, async (commandFile) => {
@@ -26,11 +24,9 @@ export class loadPrefixCommands {
     });
 
     if (this.client.commands.size) {
-      this.client.logger.loader(
-        `${this.client.commands.size} Prefix Command Loaded!`
-      );
+      this.client.logger.loader(`${this.client.commands.size} Command Loaded!`);
     } else {
-      this.client.logger.warn(`No prefix command loaded, is everything ok?`);
+      this.client.logger.warn(`No command loaded, is everything ok?`);
     }
   }
 
@@ -42,14 +38,14 @@ export class loadPrefixCommands {
 
     if (!command.name?.length) {
       this.client.logger.warn(
-        `"${rltPath}" The prefix command file does not have a name. Skipping...`
+        `"${rltPath}" The command file does not have a name. Skipping...`
       );
       return;
     }
 
     if (this.client.commands.has(command.name)) {
       this.client.logger.warn(
-        `"${command.name}" prefix command has already been installed. Skipping...`
+        `"${command.name}" command has already been installed. Skipping...`
       );
       return;
     }
@@ -58,28 +54,28 @@ export class loadPrefixCommands {
 
     if (checkRes !== KeyCheckerEnum.Pass) {
       this.client.logger.warn(
-        `"${command.name}" prefix command is not implements correctly [${checkRes}]. Skipping...`
+        `"${command.name}" command is not implements correctly [${checkRes}]. Skipping...`
       );
       return;
     }
 
-    this.client.commands.set(command.name, command);
+    this.client.commands.set(command.name.join("-"), command);
 
     if (command.aliases && command.aliases.length !== 0)
       command.aliases.forEach((a: string) =>
-        this.client.aliases.set(a, command.name)
+        this.client.aliases.set(a, command.name.join("-"))
       );
   }
 
   keyChecker(obj: Record<string, any>): KeyCheckerEnum {
-    const base = new PrefixCommand();
+    const base = new Command();
     const baseKeyArray = Object.keys(base);
     const check = Object.keys(obj);
     const checkedKey: string[] = [];
 
     if (baseKeyArray.length > check.length) return KeyCheckerEnum.MissingKey;
     if (baseKeyArray.length < check.length) return KeyCheckerEnum.TooMuchKey;
-    if (obj.run == undefined) return KeyCheckerEnum.NoRunFunction;
+    if (obj.execute == undefined) return KeyCheckerEnum.NoRunFunction;
 
     try {
       for (let i = 0; i < check.length; i++) {

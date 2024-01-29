@@ -2,41 +2,16 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { Manager } from "../manager.js";
 import chillout from "chillout";
 import { makeSureFolderExists } from "stuffs";
-import path from "node:path";
+import path from "path";
 import readdirRecursive from "recursive-readdir";
-import {
-  ApplicationCommandOptionType,
-  ApplicationCommandManager,
-  ApplicationCommandDataResolvable,
-  REST,
-} from "discord.js";
+import { ApplicationCommandOptionType, REST } from "discord.js";
 import {
   CommandInterface,
   UploadCommandInterface,
 } from "../@types/Interaction.js";
-import { join, dirname } from "node:path";
+import { join, dirname } from "path";
 import { Routes } from "discord-api-types/v10";
-
-export type BotInfoType = {
-  id: string;
-  username: string;
-  avatar: string;
-  discriminator: string;
-  public_flags: number;
-  flags: number;
-  bot: boolean;
-  banner?: string;
-  accent_color?: string;
-  global_name?: string;
-  avatar_decoration_data?: string;
-  banner_color?: string;
-  mfa_enabled?: boolean;
-  locale?: string;
-  premium_type?: number;
-  email?: string;
-  verified?: boolean;
-  bio: string;
-};
+import { BotInfoType } from "../@types/User.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -50,38 +25,27 @@ export class DeployService {
   async combineDir() {
     let store: CommandInterface[] = [];
 
-    let interactionsFolder = path.resolve(
-      join(__dirname, "..", "commands", "slash")
-    );
-
-    let contextsFolder = path.resolve(
-      join(__dirname, "..", "commands", "context")
-    );
+    let interactionsFolder = path.resolve(join(__dirname, "..", "commands"));
 
     await makeSureFolderExists(interactionsFolder);
-    await makeSureFolderExists(contextsFolder);
 
     let interactionFilePaths = await readdirRecursive(interactionsFolder);
-    let contextFilePaths = await readdirRecursive(contextsFolder);
 
     interactionFilePaths = interactionFilePaths.filter((i: string) => {
       let state = path.basename(i).startsWith("-");
       return !state;
     });
 
-    contextFilePaths = contextFilePaths.filter((i: string) => {
-      let state = path.basename(i).startsWith("-");
-      return !state;
-    });
-
-    const fullPath = interactionFilePaths.concat(contextFilePaths);
-
-    await chillout.forEach(fullPath, async (interactionFilePath: string) => {
-      const cmd = new (
-        await import(pathToFileURL(interactionFilePath).toString())
-      ).default();
-      return store.push(cmd);
-    });
+    await chillout.forEach(
+      interactionFilePaths,
+      async (interactionFilePath: string) => {
+        const cmd = new (
+          await import(pathToFileURL(interactionFilePath).toString())
+        ).default();
+        cmd.usingInteraction ? store.push(cmd) : true;
+        return;
+      }
+    );
 
     return store;
   }

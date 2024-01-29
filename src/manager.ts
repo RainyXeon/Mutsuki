@@ -9,12 +9,12 @@ import { LoggerService } from "./services/LoggerService.js";
 import { ClusterClient, getInfo } from "discord-hybrid-sharding";
 import { Metadata } from "./@types/Metadata.js";
 import { ManifestService } from "./services/ManifestService.js";
-import { PrefixCommand, SlashCommand } from "./@types/Command.js";
 import { Config } from "./@types/Config.js";
 import { config } from "dotenv";
 import { initHandler } from "./handlers/index.js";
 import utils from "node:util";
 import { DeployService } from "./services/DeployService.js";
+import { Command } from "./structures/Command.js";
 config();
 
 const loggerService = new LoggerService().init();
@@ -32,8 +32,7 @@ export class Manager extends Client {
   color: ColorResolvable;
   prefix: string;
   shard_status: boolean;
-  slash: Collection<string, SlashCommand>;
-  commands: Collection<string, PrefixCommand>;
+  commands: Collection<string, Command>;
   aliases: Collection<string, string>;
   cluster?: ClusterClient<Client>;
 
@@ -71,7 +70,6 @@ export class Manager extends Client {
     this.shard_status = false;
 
     // Collections
-    this.slash = new Collection();
     this.commands = new Collection();
     this.aliases = new Collection();
 

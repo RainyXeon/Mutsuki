@@ -1,9 +1,13 @@
 import {
+  ApplicationCommandOptionType,
+  Attachment,
   CommandInteraction,
   CommandInteractionOptionResolver,
 } from "discord.js";
 import { Manager } from "../../manager.js";
 import { GlobalInteraction } from "../../@types/Interaction.js";
+import { ConvertToMention } from "../../utils/ConvertToMention.js";
+import { CommandHandler } from "../../structures/CommandHandler.js";
 
 /**
  * @param {GlobalInteraction} interaction
@@ -11,74 +15,84 @@ import { GlobalInteraction } from "../../@types/Interaction.js";
 
 export default class {
   async execute(client: Manager, interaction: GlobalInteraction) {
-    if (
-      interaction.isCommand() ||
-      interaction.isContextMenuCommand() ||
-      interaction.isModalSubmit() ||
-      interaction.isChatInputCommand() ||
-      interaction.isAutocomplete()
-    ) {
-      if (!interaction.guild || interaction.user.bot) return;
+    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.guild || interaction.user.bot) return;
 
-      let subCommandName = "";
-      try {
-        subCommandName = (
-          (interaction as CommandInteraction)
-            .options as CommandInteractionOptionResolver
-        ).getSubcommand();
-      } catch {}
-      let subCommandGroupName = "";
-      try {
-        subCommandGroupName = (
-          (interaction as CommandInteraction)
-            .options as CommandInteractionOptionResolver
-        ).getSubcommandGroup()!;
-      } catch {}
+    let subCommandName = "";
+    try {
+      subCommandName = (
+        (interaction as CommandInteraction)
+          .options as CommandInteractionOptionResolver
+      ).getSubcommand();
+    } catch {}
+    let subCommandGroupName = "";
+    try {
+      subCommandGroupName = (
+        (interaction as CommandInteraction)
+          .options as CommandInteractionOptionResolver
+      ).getSubcommandGroup()!;
+    } catch {}
 
-      const command = client.slash.find((command) => {
-        switch (command.name.length) {
-          case 1:
-            return (
-              command.name[0] == (interaction as CommandInteraction).commandName
-            );
-          case 2:
-            return (
-              command.name[0] ==
-                (interaction as CommandInteraction).commandName &&
-              command.name[1] == subCommandName
-            );
-          case 3:
-            return (
-              command.name[0] ==
-                (interaction as CommandInteraction).commandName &&
-              command.name[1] == subCommandGroupName &&
-              command.name[2] == subCommandName
-            );
-        }
-      });
+    const commandNameArray = [];
 
-      if (!command) return;
+    if (interaction.commandName) commandNameArray.push(interaction.commandName);
+    if (subCommandName.length !== 0 && !subCommandGroupName)
+      commandNameArray.push(subCommandName);
+    if (subCommandGroupName) {
+      commandNameArray.push(subCommandGroupName);
+      commandNameArray.push(subCommandName);
+    }
 
-      const msg_cmd = [
-        `[COMMAND] ${command.name[0]}`,
-        `${command.name[1] || ""}`,
-        `${command.name[2] || ""}`,
-        `used by ${interaction.user.tag} from ${interaction.guild.name} (${interaction.guild.id})`,
-      ];
+    const command = client.commands.get(commandNameArray.join("-"));
 
-      client.logger.info(`${msg_cmd.join(" ")}`);
+    if (!command) return commandNameArray.length == 0;
 
-      if (!command) return;
-      if (command) {
-        try {
-          command.run(interaction, client);
-        } catch (error) {
-          client.logger.log({
-            level: "error",
-            message: error,
-          });
+    if (!command) return;
+
+    try {
+      const args = [];
+      let attachments: Attachment | undefined;
+
+      for (const data of interaction.options.data) {
+        const check = new ConvertToMention().execute({
+          type: data.type,
+          value: String(data.value),
+        });
+        if (check !== "error") {
+          args.push(check);
+        } else if (data.type == ApplicationCommandOptionType.Attachment) {
+          attachments = data.attachment;
+        } else {
+          if (data.value) args.push(String(data.value));
+          if (data.options) {
+            for (const optionData of data.options) {
+              if (optionData.value) args.push(String(optionData.value));
+            }
+          }
         }
       }
+
+      const handler = new CommandHandler({
+        interaction: interaction as CommandInteraction,
+        client: client,
+        args: args,
+        prefix: "/",
+      });
+
+      if (attachments) handler.addSingleAttachment(attachments);
+
+      client.logger.info(
+        `[COMMAND] ${commandNameArray.join("-")} used by ${
+          interaction.user.username
+        } from ${interaction.guild.name} (${interaction.guild.id})`
+      );
+
+      command.execute(client, handler);
+    } catch (error) {
+      client.logger.log({
+        level: "error",
+        message: error,
+      });
     }
   }
 }
