@@ -1,7 +1,7 @@
 {
-  "name": "byteblaze",
+  "name": "mutsuki",
   "version": "1.0.0",
-  "description": "A versatile and powerful music bot for Discord that brings rhythm and melody to your server. This is a big upgrade of Cylane!",
+  "description": "This is the framework that I used for RainyXeon/ByteBlaze discord bot. Inspired by NanoSpace.",
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
