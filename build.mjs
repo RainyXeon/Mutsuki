@@ -113,9 +113,9 @@ if (args.get(0) == acceptedParams[2]) {
     logger("Edit manifest file complete!", "build");
 
     await fse.mkdir("./out");
-    await fse.mkdir("./out/ByteBlaze");
+    await fse.mkdir("./out/Mutsuki");
 
-    copydir.sync(".", "./out/ByteBlaze", {
+    copydir.sync(".", "./out/Mutsuki", {
       filter: function (stat, filepath, filename) {
         if (stat === "file" && ignored.includes(filename)) {
           return false;
@@ -176,7 +176,7 @@ if (args.get(0) == acceptedParams[2]) {
 
     // Archive build
     await fse.mkdir("./out");
-    const path = `./out/ByteBlaze.zip`;
+    const path = `./out/Mutsuki.zip`;
 
     const zipper = new archiver(".", path, false, ignored);
     zipper.createZip();
