@@ -24,7 +24,6 @@ loggerService.info("Booting client...");
 
 export class Manager extends Client {
   // Interface
-  token: string;
   metadata: Metadata;
   config: Config;
   logger: any;
@@ -63,7 +62,6 @@ export class Manager extends Client {
     this.logger = loggerService;
     this.config = configData;
     this.metadata = new ManifestService().data.metadata.bot;
-    this.token = this.config.bot.TOKEN;
     this.owner = this.config.bot.OWNER_ID;
     this.color = (this.config.bot.EMBED_COLOR || "#2b2d31") as ColorResolvable;
     this.prefix = this.config.features.MESSAGE_CONTENT.commands.prefix || "d!";
@@ -89,6 +87,6 @@ export class Manager extends Client {
   }
 
   connect() {
-    super.login(this.token);
+    super.login(this.config.bot.TOKEN);
   }
 }
