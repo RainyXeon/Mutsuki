@@ -46,7 +46,6 @@ export class DeployService {
     command.push(...this.parseEngine(store))
 
     this.client.logger.info(
-      DeployService.name,
       'Reading interaction files completed, setting up REST...'
     )
 
@@ -54,7 +53,6 @@ export class DeployService {
     const client = await rest.get(Routes.user())
 
     this.client.logger.info(
-      DeployService.name,
       `Setting up REST completed! Account information received! ${(client as BotInfoType).username}#${
         (client as BotInfoType).discriminator
       } (${(client as BotInfoType).id})`
@@ -62,7 +60,6 @@ export class DeployService {
 
     if (command.length === 0)
       return this.client.logger.info(
-        DeployService.name,
         'No interactions loaded. Exiting auto deploy...'
       )
 
